@@ -333,3 +333,17 @@ In bucket permissions, add the following line under GET:
     <MaxAgeSeconds>3000</MaxAgeSeconds>
     <AllowedHeader>Authorization</AllowedHeader>
 ```
+
+Set up travis.ci.
+
+Create a new file called .travis.yml
+
+```
+language: python
+python:
+- "3.4"
+install: "pip install -r requirements.txt"
+script:
+- SECRET_KEY="whatever" .manage.py test
+```
+
