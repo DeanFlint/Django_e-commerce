@@ -348,3 +348,39 @@ script:
 ```
 
 [![Build Status](https://travis-ci.org/DeanFlint/Django_e-commerce.svg?branch=master)](https://travis-ci.org/DeanFlint/Django_e-commerce)
+
+
+### Heroku
+
+Add all keys into config vars on heroku from your env.py file.
+
+Connect to github repo
+
+```
+pip3 install gunicorn 
+```
+
+Create Procfile and add the following:
+
+```
+web: gunicorn ecommerce.wsgi:application
+```
+
+Push relevant changes to github.
+
+Add the following onto your config files.
+
+```
+DISABLE_COLLECTSTATIC
+
+1
+```
+
+Add your heroku app onto your Allowed_Hosts section:
+
+```
+ALLOWED_HOSTS = [os.environ.get('C9_HOSTNAME'), 'ecommerce-django-df.herokuapp.com']
+```
+
+You may need to restart Dynos before all of your settings have been pushed through.
+
