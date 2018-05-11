@@ -145,3 +145,191 @@ We need to migrate these changes into our db:
 
 ``` python3 manage.py startapp cart ```
 
+#### Install Stripe:
+
+``` sudo pip3 install stripe ```
+
+#### In settings, add the following:
+
+``` 
+STRIPE_PUBLISHABLE = os.getenv('STRIPE_PUBLISHABLE')
+STRIPE_SECRET = os.getenv('STRIPE_SECRET')
+```
+
+#### Now create a new file called env.py which will contain our keys:
+
+``` 
+import os
+
+os.envrion.setdefault("STRIPE_PUBLISHABLE", "paste key here")
+os.envrion.setdefault("STRIPE_SECRET", "paste key here")
+```
+
+#### Add env to your settings.py:
+
+```
+import env
+```
+
+### Getting an AWS Account:
+
+On amazon.com, login (or create an account).
+
+aws.amazon.com
+
+Sign in to console.
+
+Create new account.
+
+Fill in the details on the personal account form.
+
+Choose the plan, and launch.
+
+Find S3 and create bucket.
+
+Click next and on Set Permissions, "Grant public read access to this bucket" on the dropdown then finish.
+
+Click on Static Website hosting and enter index.html and error.html (we don't actually need these at the moment).
+
+
+Click on permissions and select Bucket Policy.
+
+```
+{
+    "Version":"2012-10-17",
+    "Statement":[{
+      "Sid":"PublicReadGetObject",
+        "Effect":"Allow",
+      "Principal": "*",
+      "Action":["s3:GetObject"],
+      "Resource":[" enter bucket arn ---> arn:aws:s3:::example-bucket/*<--- "]
+    }
+  ]
+}
+```
+
+Save then go onto the main page of AWS. 
+
+Search for IAM.
+
+Create group, and click next on the options.
+
+Create policy and import S3. Give it a name and edit the json to:
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+                "--> bucket name <--",
+                "--> bucket name but with /* at the end <--*"
+            ]
+        }
+    ]
+}
+```
+
+After this, you can then search for this policy.
+
+Click on policy actions and attach to the group you created earlier.
+
+Now we can add a user - like admin or shopkeeper.
+
+Give it the group permissions and download the csv file which contains the keys.
+
+
+#### Connecting Django to S3
+
+Install the following:
+
+``` sudo pip3 install django-storages ```
+
+``` sudo pip3 install boto3 ```
+
+Update INSTALLED_APPS:
+
+```
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_forms_bootstrap',
+    'accounts',
+    'products',
+    'cart',
+    'checkout',
+    'storages',
+]
+```
+
+```
+AWS_S3_OBJECT_PARAMETERS = {
+    'Expires': 'Thu, 31 Dec 2099 20:00:00 GMT',
+    'CacheControl': 'max-age=94608000',
+}
+
+AWS_STORAGE_BUCKET_NAME = 'dean-django-project'
+AWS_S3_REGION_NAME = 'eu-west-2'
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+```
+
+In env.py, add the aws keys:
+
+```
+os.environ.setdefault("AWS_ACCESS_KEY_ID", "ADD KEY HERE")
+os.environ.setdefault("AWS_SECRET_ACCESS_KEY_ID", "ADD SECRET KEY HERE")
+```
+
+In the terminal:
+
+```
+python3 manage.py collectstatic
+```
+
+#### Store Media on S3
+
+Create a new file called custom_storqges
+
+```
+from django.conf import settings
+from storages.backends.s3boto3 import S3Boto3Storage
+
+class StaticStorage(S3Boto3Storage):
+    location = settings.STATICFILES_LOCATION
+```
+
+In settings.py:
+
+```
+STATICFILES_LOCATION = 'static'
+STATICFILES_STORAGE = 'custom_storages.StaticStorage'
+```
+
+Now in the terminal:
+
+```
+python3 manage.py collectstatic
+```
+
+Now delete all folders in the S3 bucket apart from static.
+
+In bucket permissions, add the following line under GET:
+
+```
+    <AllowedOrigin>*</AllowedOrigin>
+    <AllowedMethod>GET</AllowedMethod>
+    <AllowedMethod>HEAD</AllowedMethod>
+    <MaxAgeSeconds>3000</MaxAgeSeconds>
+    <AllowedHeader>Authorization</AllowedHeader>
+```
