@@ -347,3 +347,4 @@ script:
 - SECRET_KEY="whatever" .manage.py test
 ```
 
+[![Build Status](https://travis-ci.org/DeanFlint/Django_e-commerce.svg?branch=master)](https://travis-ci.org/DeanFlint/Django_e-commerce)
